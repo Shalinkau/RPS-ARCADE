@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rock Paper Scissors 🍄</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pink: #ff6eb4;
+      --hotpink: #ff3d9a;
+      --babypink: #ffd6ec;
+      --purple: #9b59b6;
+      --yellow: #ffd93d;
+      --green: #6bcb77;
+      --red: #ff6b6b;
+      --blue: #4ecdc4;
+      --white: #fff9fe;
+      --dark: #2d1b35;
+      --shadow: #c0467a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--babypink);
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(255,110,180,0.3) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(155,89,182,0.2) 0%, transparent 40%),
+        url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='20' cy='20' r='2' fill='rgba(255,110,180,0.15)'/%3E%3C/g%3E%3C/svg%3E");
+      min-height: 100vh;
+      font-family: 'Nunito', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 60px;
+      overflow-x: hidden;
+    }
+
+    /* floating stars bg */
+    .stars { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+    .star {
+      position: absolute;
+      font-size: 1.2rem;
+      animation: floatStar linear infinite;
+      opacity: 0.4;
+    }
+
+    .wrapper { position: relative; z-index: 1; width: 100%; max-width: 680px; }
+
+    /* HEADER */
+    header { text-align: center; margin-bottom: 28px; }
+
+    .pixel-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(1rem, 4vw, 1.6rem);
+      color: var(--hotpink);
+      text-shadow:
+        3px 3px 0 var(--shadow),
+        6px 6px 0 rgba(192,70,122,0.3);
+      line-height: 1.6;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+    .pixel-title .white { color: var(--white); text-shadow: 3px 3px 0 var(--purple), 6px 6px 0 rgba(155,89,182,0.4); }
+
+    .subtitle-tag {
+      display: inline-block;
+      background: var(--purple);
+      color: white;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.45rem;
+      padding: 6px 14px;
+      letter-spacing: 0.1em;
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+      margin-bottom: 8px;
+    }
+
+    .mushroom-row {
+      font-size: 1.6rem;
+      letter-spacing: 8px;
+      margin: 12px 0 4px;
+      animation: bounce 1s ease-in-out infinite alternate;
+    }
+
+    /* CARD */
+    .card {
+      background: var(--white);
+      border: 3px solid var(--pink);
+      box-shadow: 6px 6px 0 var(--shadow), 12px 12px 0 rgba(192,70,122,0.15);
+      padding: 28px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -3px; left: 12px;
+      width: 60px; height: 3px;
+      background: var(--yellow);
+    }
+
+    /* SCOREBOARD */
+    .score-card {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      background: var(--dark);
+      border: 3px solid var(--pink);
+      box-shadow: 5px 5px 0 var(--shadow);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .score-side { text-align: center; }
+    .score-player-name {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.5rem;
+      color: var(--pink);
+      margin-bottom: 8px;
+      letter-spacing: 0.08em;
+    }
+    .score-number {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 2.8rem;
+      color: var(--yellow);
+      text-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+      transition: all 0.2s;
+      line-height: 1;
+    }
+    .score-number.pop-win { animation: scorePop 0.3s ease; color: var(--green); }
+    .score-number.pop-lose { animation: scorePop 0.3s ease; color: var(--red); }
+
+    .score-mid { text-align: center; }
+    .vs-pixel {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.7rem;
+      color: var(--pink);
+      display: block;
+      margin-bottom: 6px;
+    }
+    .round-pixel {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.38rem;
+      color: rgba(255,214,236,0.6);
+      letter-spacing: 0.06em;
+    }
+
+    /* ARENA */
+    .arena {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .arena-side { text-align: center; }
+    .arena-player-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.42rem;
+      color: var(--purple);
+      margin-bottom: 10px;
+      letter-spacing: 0.08em;
+    }
+
+    .choice-box {
+      width: 100px; height: 100px;
+      margin: 0 auto;
+      background: var(--babypink);
+      border: 3px solid var(--pink);
+      box-shadow: 4px 4px 0 var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .choice-box.win-box { border-color: var(--green); box-shadow: 4px 4px 0 #3a8a42, 0 0 20px rgba(107,203,119,0.4); background: rgba(107,203,119,0.1); }
+    .choice-box.lose-box { border-color: var(--red); box-shadow: 4px 4px 0 #a03030, 0 0 20px rgba(255,107,107,0.3); }
+    .choice-box.draw-box { border-color: var(--yellow); box-shadow: 4px 4px 0 #a08010; }
+    .choice-box.shake-it { animation: shakeBox 0.4s ease; }
+    .choice-box.pop-in { animation: popBox 0.4s ease; }
+
+    .arena-mid { text-align: center; }
+    .countdown-pixel {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1.4rem;
+      color: var(--yellow);
+      text-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: countFlash 0.6s ease;
+    }
+
+    .result-banner {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.55rem;
+      min-height: 24px;
+      text-align: center;
+      letter-spacing: 0.06em;
+      margin-top: 8px;
+    }
+    .result-banner.win { color: var(--green); }
+    .result-banner.lose { color: var(--red); }
+    .result-banner.draw { color: var(--purple); }
+
+    /* BUTTONS */
+    .buttons-section { margin-bottom: 0; }
+    .buttons-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.42rem;
+      color: var(--purple);
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .choices {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    .choice-btn {
+      flex: 1;
+      max-width: 180px;
+      background: var(--white);
+      border: 3px solid var(--pink);
+      box-shadow: 5px 5px 0 var(--shadow);
+      padding: 20px 10px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      position: relative;
+    }
+    .choice-btn:hover {
+      transform: translateY(-4px);
+      box-shadow: 5px 9px 0 var(--shadow);
+    }
+    .choice-btn:active {
+      transform: translateY(2px);
+      box-shadow: 2px 2px 0 var(--shadow);
+    }
+    .choice-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 5px 5px 0 var(--shadow); }
+
+    .choice-btn.rock { border-color: #ff8c69; }
+    .choice-btn.rock:hover { background: #fff0eb; }
+    .choice-btn.paper { border-color: #69b4ff; }
+    .choice-btn.paper:hover { background: #ebf4ff; }
+    .choice-btn.scissors { border-color: #69d469; }
+    .choice-btn.scissors:hover { background: #edfaed; }
+
+    .btn-emoji { font-size: 2.5rem; line-height: 1; }
+    .btn-name {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.42rem;
+      color: var(--dark);
+      letter-spacing: 0.06em;
+    }
+    .btn-beats {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.65rem;
+      color: #b0a0b8;
+      font-weight: 600;
+    }
+
+    /* HISTORY */
+    .history-section { }
+    .history-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.42rem;
+      color: var(--purple);
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .history-title::after { content: ''; flex: 1; height: 2px; background: var(--pink); opacity: 0.3; }
+    .history-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 36px;
+    }
+    .chip {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.4rem;
+      padding: 6px 10px;
+      letter-spacing: 0.06em;
+      animation: popChip 0.3s ease;
+    }
+    .chip.W { background: var(--green); color: white; box-shadow: 2px 2px 0 #3a8a42; }
+    .chip.L { background: var(--red); color: white; box-shadow: 2px 2px 0 #a03030; }
+    .chip.D { background: var(--purple); color: white; box-shadow: 2px 2px 0 #6a3a8a; }
+
+    /* STATS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .stat-box {
+      background: var(--dark);
+      border: 2px solid var(--pink);
+      padding: 14px 8px;
+      text-align: center;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    .stat-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1.2rem;
+      color: var(--yellow);
+      display: block;
+      margin-bottom: 6px;
+    }
+    .stat-lbl {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.35rem;
+      color: var(--pink);
+      letter-spacing: 0.06em;
+    }
+
+    /* WIN RATE */
+    .winrate-section { }
+    .winrate-top {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.42rem;
+      color: var(--purple);
+      margin-bottom: 8px;
+    }
+    .winrate-track {
+      height: 14px;
+      background: var(--babypink);
+      border: 2px solid var(--pink);
+      box-shadow: 3px 3px 0 var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .winrate-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--hotpink), var(--purple));
+      transition: width 0.6s ease;
+      position: relative;
+    }
+    .winrate-fill::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 4px; right: 0;
+      height: 4px;
+      background: rgba(255,255,255,0.4);
+    }
+
+    /* RESET */
+    .reset-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: var(--dark);
+      border: 3px solid var(--pink);
+      box-shadow: 5px 5px 0 var(--shadow);
+      color: var(--pink);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.12s ease;
+    }
+    .reset-btn:hover { background: var(--hotpink); color: white; transform: translateY(-2px); box-shadow: 5px 7px 0 var(--shadow); }
+    .reset-btn:active { transform: translateY(2px); box-shadow: 2px 2px 0 var(--shadow); }
+
+    /* FOOTER */
+    .pixel-footer {
+      text-align: center;
+      margin-top: 28px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.4rem;
+      color: var(--purple);
+      letter-spacing: 0.08em;
+      line-height: 2;
+    }
+    .pixel-footer a { color: var(--hotpink); text-decoration: none; }
+    .pixel-footer a:hover { text-decoration: underline; }
+
+    /* ANIMATIONS */
+    @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-6px)} }
+    @keyframes floatStar { 0%{transform:translateY(100vh) rotate(0deg);opacity:0} 10%{opacity:0.4} 90%{opacity:0.4} 100%{transform:translateY(-10vh) rotate(360deg);opacity:0} }
+    @keyframes shakeBox { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+    @keyframes popBox { 0%{transform:scale(0.7)} 60%{transform:scale(1.1)} 100%{transform:scale(1)} }
+    @keyframes scorePop { 0%{transform:scale(1)} 50%{transform:scale(1.3)} 100%{transform:scale(1)} }
+    @keyframes popChip { 0%{transform:scale(0) rotate(-10deg)} 70%{transform:scale(1.2) rotate(3deg)} 100%{transform:scale(1) rotate(0)} }
+    @keyframes countFlash { 0%{transform:scale(1.4);opacity:0} 30%{opacity:1} 80%{transform:scale(1)} 100%{opacity:0} }
+
+    @media(max-width:500px) {
+      .choices { gap: 8px; }
+      .choice-btn { padding: 14px 6px 12px; }
+      .btn-emoji { font-size: 1.8rem; }
+      .score-number { font-size: 2rem; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .pixel-title { font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- floating stars -->
+<div class="stars" id="stars"></div>
+
+<div class="wrapper">
+
+  <header>
+    <div class="mushroom-row">🍄 ⭐ 🍄 ⭐ 🍄</div>
+    <div class="pixel-title">ROCK<br><span class="white">PAPER</span><br>SCISSORS!</div>
+    <div class="subtitle-tag">🎮 ARCADE EDITION 🎮</div>
+  </header>
+
+  <!-- Score -->
+  <div class="score-card">
+    <div class="score-side">
+      <div class="score-player-name">YOU 👾</div>
+      <div class="score-number" id="playerScore">0</div>
+    </div>
+    <div class="score-mid">
+      <span class="vs-pixel">VS</span>
+      <span class="round-pixel" id="roundTxt">ROUND 0</span>
+    </div>
+    <div class="score-side">
+      <div class="score-player-name">CPU 🤖</div>
+      <div class="score-number" id="aiScore">0</div>
+    </div>
+  </div>
+
+  <!-- Arena -->
+  <div class="card">
+    <div class="arena">
+      <div class="arena-side">
+        <div class="arena-player-label">YOUR PICK</div>
+        <div class="choice-box" id="playerBox">🤔</div>
+      </div>
+      <div class="arena-mid">
+        <div class="countdown-pixel" id="cdDisplay">⚔️</div>
+      </div>
+      <div class="arena-side">
+        <div class="arena-player-label">CPU PICK</div>
+        <div class="choice-box" id="aiBox">🤖</div>
+      </div>
+    </div>
+    <div class="result-banner" id="resultBanner">← pick your weapon! →</div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="card buttons-section">
+    <div class="buttons-label">⚡ CHOOSE YOUR WEAPON ⚡</div>
+    <div class="choices">
+      <button class="choice-btn rock" onclick="play('rock')">
+        <span class="btn-emoji">🪨</span>
+        <span class="btn-name">ROCK</span>
+        <span class="btn-beats">crushes scissors</span>
+      </button>
+      <button class="choice-btn paper" onclick="play('paper')">
+        <span class="btn-emoji">📄</span>
+        <span class="btn-name">PAPER</span>
+        <span class="btn-beats">covers rock</span>
+      </button>
+      <button class="choice-btn scissors" onclick="play('scissors')">
+        <span class="btn-emoji">✂️</span>
+        <span class="btn-name">SCISSORS</span>
+        <span class="btn-beats">cuts paper</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="card">
+    <div class="stats-grid">
+      <div class="stat-box">
+        <span class="stat-val" id="sWins">0</span>
+        <span class="stat-lbl">WINS 🏆</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-val" id="sLosses">0</span>
+        <span class="stat-lbl">LOSSES 💀</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-val" id="sDraws">0</span>
+        <span class="stat-lbl">DRAWS 🤝</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-val" id="sStreak">0</span>
+        <span class="stat-lbl">STREAK 🔥</span>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;" class="winrate-section">
+      <div class="winrate-top">
+        <span>WIN RATE</span>
+        <span id="winPct">0%</span>
+      </div>
+      <div class="winrate-track">
+        <div class="winrate-fill" id="winFill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card history-section">
+    <div class="history-title">MATCH LOG</div>
+    <div class="history-chips" id="historyChips">
+      <span style="font-size:0.7rem;color:#b0a0b8;font-family:'Press Start 2P',monospace;font-size:0.35rem;">no games yet...</span>
+    </div>
+  </div>
+
+  <button class="reset-btn" onclick="resetGame()">↺ RESET GAME</button>
+
+  <div class="pixel-footer">
+    MADE BY SHALIN K</a> 🍄<br>
+    <a href="https://github.com/Shalinkau" target="_blank">GITHUB ↗</a> · SRM ktr · 2026
+  </div>
+
+</div>
+
+<script>
+  // floating stars
+  const starEls = ['⭐','🌟','✨','💫','🌸','🍄'];
+  for(let i=0;i<18;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.textContent = starEls[Math.floor(Math.random()*starEls.length)];
+    s.style.left = Math.random()*100+'vw';
+    s.style.fontSize = (0.7+Math.random()*1.2)+'rem';
+    s.style.animationDuration = (8+Math.random()*14)+'s';
+    s.style.animationDelay = (-Math.random()*14)+'s';
+    document.getElementById('stars').appendChild(s);
+  }
+
+  const emojis = { rock:'🪨', paper:'📄', scissors:'✂️' };
+  const choices = ['rock','paper','scissors'];
+  let wins=0, losses=0, draws=0, rounds=0, streak=0;
+  let playing=false;
+  let firstGame = true;
+
+  const pBox     = document.getElementById('playerBox');
+  const aBox     = document.getElementById('aiBox');
+  const pScore   = document.getElementById('playerScore');
+  const aScore   = document.getElementById('aiScore');
+  const roundTxt = document.getElementById('roundTxt');
+  const cdDisp   = document.getElementById('cdDisplay');
+  const result   = document.getElementById('resultBanner');
+  const chips    = document.getElementById('historyChips');
+
+  function btns(){ return document.querySelectorAll('.choice-btn'); }
+  function disableAll(v){ btns().forEach(b=>b.disabled=v); }
+  function clearBoxes(){
+    pBox.className='choice-box';
+    aBox.className='choice-box';
+    result.className='result-banner';
+  }
+
+  async function play(pick){
+    if(playing) return;
+    playing=true;
+    if(firstGame){ chips.innerHTML=''; firstGame=false; }
+    disableAll(true);
+    clearBoxes();
+    result.textContent='';
+    pBox.textContent = emojis[pick];
+    pBox.classList.add('pop-in');
+    aBox.textContent='🤔';
+    cdDisp.textContent='';
+
+    // countdown
+    for(const s of ['3','2','1','GO!']){
+      cdDisp.textContent=s;
+      cdDisp.style.animation='none';
+      cdDisp.offsetHeight;
+      cdDisp.style.animation='countFlash 0.65s ease forwards';
+      await sleep(600);
+    }
+    cdDisp.textContent='⚔️';
+
+    // shuffle AI
+    let n=0;
+    const iv = setInterval(()=>{ aBox.textContent=emojis[choices[n++%3]]; },80);
+    await sleep(700);
+    clearInterval(iv);
+
+    const aiPick = choices[Math.floor(Math.random()*3)];
+    aBox.textContent = emojis[aiPick];
+    aBox.classList.add('pop-in');
+    await sleep(300);
+
+    rounds++;
+    roundTxt.textContent = `ROUND ${rounds}`;
+    const r = getResult(pick, aiPick);
+
+    if(r==='win'){
+      wins++; streak = streak>0?streak+1:1;
+      pScore.textContent=wins;
+      pBox.classList.add('win-box');
+      aBox.classList.add('lose-box','shake-it');
+      result.textContent = streak>1 ? `🔥 YOU WIN! ${streak}x STREAK!` : '🏆 YOU WIN!';
+      result.classList.add('win');
+      flashScore(pScore,'win');
+      addChip('W');
+    } else if(r==='lose'){
+      losses++; streak = streak<0?streak-1:-1;
+      aScore.textContent=losses;
+      aBox.classList.add('win-box');
+      pBox.classList.add('lose-box','shake-it');
+      result.textContent='💀 CPU WINS!';
+      result.classList.add('lose');
+      flashScore(aScore,'lose');
+      addChip('L');
+    } else {
+      draws++; streak=0;
+      pBox.classList.add('draw-box');
+      aBox.classList.add('draw-box');
+      result.textContent='🤝 DRAW!';
+      result.classList.add('draw');
+      addChip('D');
+    }
+
+    updateStats();
+    await sleep(1200);
+    playing=false;
+    disableAll(false);
+  }
+
+  function getResult(p,a){
+    if(p===a) return 'draw';
+    if((p==='rock'&&a==='scissors')||(p==='paper'&&a==='rock')||(p==='scissors'&&a==='paper')) return 'win';
+    return 'lose';
+  }
+
+  function flashScore(el, type){
+    el.classList.add(type==='win'?'pop-win':'pop-lose');
+    setTimeout(()=>el.classList.remove('pop-win','pop-lose'),400);
+  }
+
+  function addChip(r){
+    const labels={'W':'WIN','L':'LOSS','D':'DRAW'};
+    const c = document.createElement('span');
+    c.className=`chip ${r}`;
+    c.textContent=labels[r];
+    chips.appendChild(c);
+    if(chips.children.length>15) chips.removeChild(chips.firstChild);
+  }
+
+  function updateStats(){
+    document.getElementById('sWins').textContent=wins;
+    document.getElementById('sLosses').textContent=losses;
+    document.getElementById('sDraws').textContent=draws;
+    document.getElementById('sStreak').textContent=Math.abs(streak);
+    const rate = rounds>0?Math.round(wins/rounds*100):0;
+    document.getElementById('winFill').style.width=rate+'%';
+    document.getElementById('winPct').textContent=rate+'%';
+  }
+
+  function resetGame(){
+    wins=losses=draws=rounds=streak=0;
+    playing=false; firstGame=true;
+    pScore.textContent='0'; aScore.textContent='0';
+    roundTxt.textContent='ROUND 0';
+    pBox.textContent='🤔'; aBox.textContent='🤖';
+    cdDisp.textContent='⚔️';
+    result.textContent='← pick your weapon! →';
+    result.className='result-banner';
+    pBox.className='choice-box'; aBox.className='choice-box';
+    chips.innerHTML='<span style="font-size:0.35rem;color:#b0a0b8;font-family:\'Press Start 2P\',monospace">no games yet...</span>';
+    updateStats();
+    disableAll(false);
+  }
+
+  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+</script>
+</body>
+</htm>l
